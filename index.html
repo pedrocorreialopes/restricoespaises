@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Proibições e Restrições de Envio</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Roboto', sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f9f9f9;
+            color: #333;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        .container {
+            max-width: 600px;
+            width: 100%;
+            padding: 20px;
+            background: #fff;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
+        }
+
+        h1 {
+            font-size: 24px;
+            text-align: center;
+            color: #0056b3;
+            margin-bottom: 20px;
+        }
+
+        form {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        input[type="text"] {
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 16px;
+        }
+
+        button {
+            padding: 10px;
+            background-color: #0056b3;
+            color: #fff;
+            border: none;
+            border-radius: 4px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        button:hover {
+            background-color: #003d80;
+        }
+
+        .result {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #f1f1f1;
+            border-left: 4px solid #0056b3;
+            border-radius: 4px;
+        }
+
+        .result h2 {
+            font-size: 18px;
+            margin: 0 0 10px 0;
+        }
+
+        .result p {
+            margin: 0;
+            line-height: 1.5;
+        }
+
+        .error {
+            color: #d9534f;
+            text-align: center;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Proibições e Restrições de Envio</h1>
+        <form id="searchForm">
+            <input type="text" id="countryInput" placeholder="Digite o nome do país" required>
+            <button type="submit">Buscar</button>
+        </form>
+        <div class="result" id="result" style="display: none;">
+            <h2>Restrições para <span id="countryName"></span>:</h2>
+            <p id="restrictions"></p>
+        </div>
+        <p class="error" id="error" style="display: none;">País não encontrado ou sem informações disponíveis.</p>
+    </div>
+
+    <script>
+        const searchForm = document.getElementById('searchForm');
+        const countryInput = document.getElementById('countryInput');
+        const resultDiv = document.getElementById('result');
+        const errorDiv = document.getElementById('error');
+        const countryNameSpan = document.getElementById('countryName');
+        const restrictionsP = document.getElementById('restrictions');
+
+        const countryData = {
+            "Brasil": "Proibido enviar bebidas alcoólicas, produtos perecíveis e armas de fogo.",
+            "Estados Unidos": "Restrições incluem alimentos, medicamentos sem receita e produtos perigosos.",
+            "Japão": "Proibido enviar drogas, explosivos e produtos culturais protegidos.",
+            "Alemanha": "Restrição para envio de líquidos, itens perigosos e alimentos perecíveis.",
+	    "Austrália": "Proibido enviar explosivos, incluindo fogos de artifício, lingotes, notas de banco e coleiras de choque para cães.             É necessário autorização para enviar ossos e tecidos humanos, medicamentos, substâncias terapêuticas, fertilizantes, bifenilos                 policlorados, terfenilos, dispensadores de bebidas contaminantes, caixas de pagamento com chumbo, projéteis e silenciadores de               armas de fogo, lápis e pincéis com metais pesados, e produtos com símbolos australianos. Mercadorias com material biológico ou               alimentos estão sujeitas a rastreamento." ,
+            "Argentina": "Proibido enviar armas, munições, materiais de guerra e explosivos, exceto com autorização da DGFM.",
+            "Áustria": "Proibido enviar armas e munições ilegais, substâncias biológicas perecíveis infecciosas sem cumprir regulamentações              artigos registrados de valor. É necessário licença para materiais de guerra.", 
+            "Azerbaijão": "É necessário autorização para enviar medicamentos, vitaminas, produtos biológicos e veterinários e matérias-                  primas de origem animal ou vegetal.",
+            "Bahrein": "Restrito o envio de alimentos e bebidas impróprios para consumo, marfim, materiais radioativos, medicamentos e                   material impresso.",
+            "Bielorrússia": "Proibido enviar armas, equipamentos para ferimentos, imitações de armas de fogo e recipientes com gás. É                    necessário autorização para produtos militares. Leite, ovos, mel e outros alimentos estão sujeitos à inspeção sanitária. Rótulos             adequados são exigidos para alimentos pré-embalados. Substâncias químicas controladas estão sujeitas à legislação. Medicamentos             só podem ser enviados para agências.",
+            "Bélgica": "Proibido enviar materiais inflamáveis e perigosos. Abelhas, sanguessugas e bichos-da-seda exigem inspeção. Aves                  selvagens mortas, ovos e armadilhas são proibidos, exceto para caça e aves exóticas/domésticas.", 
+            "Benin": "Informações sobre itens proibidos não especificadas.", 
+            "Bolívia": "Alimentos exigem certificado de controle alimentar. Proibido enviar plantas, frutas e sementes em decomposição,                  bebidas adulteradas, medicamentos não registrados, dinheiro, cheques de viagem, cartões de crédito, ouro, platina e títulos ao                portador. Substâncias químicas controladas e produtos de origem animal para fins terapêuticos exigem autorização. Pacotes                   pequenos de até 2 kg são permitidos com etiqueta NC 22.", 
+             "Brasil": "Proibido o fracionamento de envios para evitar taxas. Medicamentos para uso pessoal exigem relatórios médicos e                   prescrição.",
+             "Brunei Darussalam": "Bebidas, resíduos alimentícios e explosivos exigem regulamentação. Medicamentos e produtos médicos exigem              fatura certificada. Bilhetes de loteria e jogos de azar são proibidos.", 
+             "Bulgária": "Proibido enviar narcóticos, armas, munições, explosivos, materiais perigosos, artigos obscenos, itens que coloquem              funcionários em risco, materiais religiosos de seitas proibidas e itens de valor como moedas, notas, ouro, platina, pedras                   preciosas e joias.", 
+             "China": "Informações sobre itens proibidos não especificadas.", 
+            "Chipre": "Informações sobre itens proibidos não especificadas.",   
+             "Croácia": "Bebidas e fluidos alcoólicos exigem certificado sanitário e de qualidade. Tabaco exige certificado de qualidade                  sanitária e certificado do Ministério da Agricultura. Narcóticos, psicotrópicos e plantas com drogas exigem autorização. Armas               de fogo e munições exigem licença.", 
+              "Dinamarca": "Proibido enviar animais vivos (exceto abelhas e sanguessugas), aves mortas (exceto caça), carne (exceto caça                    preparada), produtos lácteos, peles e couros não tratados, armas, munições, explosivos, itens obscenos e itens proibidos no                  país de destino. Abelhas rainhas e parasitas de insetos exigem autorização.", 
+              "Equador": "Informações sobre itens proibidos não especificadas.", 
+              "Estônia": "Narcóticos exigem autorização do Ministério da Previdência Social. Medicamentos e produtos médicos exigem                        autorização prévia do Ministério da Saúde ou do Departamento Veterinário. Preparações hormonais e de sangue exigem certificado               veterinário.", 
+              "Etiópia": "Proibido enviar animais vivos (exceto abelhas, sanguessugas, bichos-da-seda e pássaros canoros). Parasitas e                pragas              de insetos exigem autorização. Tabaco exige autorização do monopólio do tabaco.", 
+               "Fiji": "Proibido enviar animais vivos.",
+               "França": "Proibido enviar animais vivos (exceto abelhas e sanguessugas), carne e produtos de origem animal de países não                 autorizados, produtos à base de aves de capoeira de países que usam arsênio, antimônio ou estrogênio na alimentação animal,                 narcóticos sem autorização, medicamentos sem autorização do Ministério da Saúde ou Agricultura e contraceptivos não                 aprovados pelo Ministério da Saúde. É necessário autorização para enviar abelhas, sanguessugas e produtos de origem animal.                 Limites quantitativos se aplicam a tabaco e bebidas alcoólicas.",
+                "Alemanha": "Proibido enviar carne, aves, penas e produtos de aves de países afetados pela gripe aviária, plantas e produtos                 vegetais sem certificado fitossanitário, forragem não conforme, bebidas destiladas sem autorização (exceto rum, araca,                 conhaque, licores e comércio dentro da UE/ACP) e tabaco em embalagens inadequadas. É necessário certificado sanitário para                 carne, aves, leite e produtos lácteos de países terceiros. Embalagens de tabaco devem ter selos fiscais.",
+               "Gana": "Proibido enviar animais vivos, plantas no solo, cocos em casca, café cru, sementes de algodão, cigarros estrangeiros                 sem aviso prévio, narcóticos e medicamentos sem autorização do Ministério da Saúde. É necessário autorização para enviar                 produtos químicos orgânicos. Cigarros estrangeiros devem ter aviso de advertência. Óleos minerais são proibidos por serem                 considerados explosivos e inflamáveis. Narcóticos são importações e exportações restritas.", 
+               "Grã-Bretanha": "Proibido enviar armas de fogo não autorizadas, armas de fogo e munições sem licença, armas automáticas,                espingardas automáticas, pistolas, lança-foguetes, morteiros, armas militares, pistolas de choque, sprays de gás CS e                pimenta. É necessário licença para enviar ossos e produtos de ossos, chifres e produtos de chifres, cascos e produtos de                cascos, troféus de caça, proteínas animais processadas, alimentos para animais de estimação, matérias-primas para alimentos                para animais de estimação, coral, marfim, casco de tartaruga, osso de baleia, dentes de animais, âmbar cinza, castóreo,                civeta, almíscar, cantarídeos, bile, glândulas e outros produtos animais usados em produtos farmacêuticos, plantas, sementes,                produtos hortícolas, batatas, frutas, flores cortadas, substâncias narcóticas, psicotrópicas, vacinas, soros, toxinas,                antitoxinas, antígenos, insulina, preparações da hipófise, corticotrofina, heparina, hialuronidase, pelos e lã de animais do               Egito ou Sudão.É proibido enviar peles e fios de pelos de cabra. Armas para fins esportivos exigem licença de                              importação.",
+               "Grécia": "Proibido enviar armas de fogo, armas brancas, munições, explosivos, itens obscenos, moedas, notas, artigos de                valor, passaportes gregos e itens que infringem direitos autorais. É necessário autorização para enviar narcóticos para fins                médicos, produtos farmacêuticos específicos, itens com monopólio estatal (sal, cartas de jogo, fósforos, fogos de artifício,                petróleo, sacarina, papel de cigarro).", 
+              "Hungria": "Proibido enviar moeda nacional, narcóticos, materiais radioativos, terra, turfa, fertilizantes naturais, composto,                caules e folhas de batata, tomate e berinjela, publicações que incitem à violência ou ódio e itens perigosos para os               funcionários dos correios. Animais, produtos de origem animal e itens que podem transmitir doenças bovinas exigem exame               veterinário. Produtos com restrições fitossanitárias exigem certificado fitossanitário.", 
+             "Índia": "Proibido enviar animais selvagens, partes e produtos de animais selvagens, marfim, plantas e produtos vegetais sem               certificado fitossanitário, sementes de algodão, narcóticos e substâncias psicotrópicas, precursores químicos, medicamentos                 falsificados, adulterados ou proibidos, animais vivos, aves, peixes e répteis, peles e couros de animais selvagens, penas de                  avestruzes e pavões e quaisquer derivados, ossos, chifres e marfim, peles e couros crus e artigos feitos com peles e couros de               animais protegidos. É necessário autorização para enviar produtos químicos. Medicamentos exigem aprovação das autoridades. ",
+               "Indonésia": "Proibido enviar narcóticos, armas, munições, explosivos, pornografia, moeda estrangeira, selos postais usados e               itens que infrinjam direitos autorais. É necessário autorização para enviar transceptores de rádio, tabaco, vinhos, animais e               plantas ameaçados de extinção, seus espécimes, sementes ou materiais de reprodução, itens sujeitos a controle aduaneiro de               quantidade e moeda nacional.",
+             "Irlanda": "É necessário licença para enviar armas de fogo e munições.", 
+             "Israel": "Todos os itens importados estão sujeitos a taxas alfandegárias. O conteúdo deve ser declarado com precisão,              incluindo valor, peso e origem. É proibido enviar dinheiro, artigos de valor em envios não registrados, passaportes israelenses               e itens que infringem direitos autorais. Armas de fogo, armas brancas e peças exigem licença. Facas e pistolas de ar com menos               de 7 joules exigem autorização policial.", 
+            "Itália": "É necessário autorização para enviar explosivos e coque de carvão e lignita da China, Vietnã, Coreia do Norte e             Mongólia. É necessário licença para o transporte de explosivos. É proibido enviar plantas, produtos vegetais e materiais de             embalagem sem certificado fitossanitário, solo e plantas com solo. A importação de carne e produtos de carne, aves e produtos de             aves, leite e produtos lácteos de países terceiros exige certificado sanitário. É proibido enviar rolamentos de esferas ou rolos             da Coreia do Norte, Mongólia, China e Vietnã. Máquinas e equipamentos elétricos do Japão, Coreia do Norte, Mongólia, China e             Vietnã exigem autorização. Veículos e peças do Japão e Coreia do Norte, Mongólia, China e Vietnã exigem autorização. É             necessário declarar o conteúdo com precisão, incluindo valor, peso, origem e número de itens.", 
+            "Jamaica": "Informações sobre itens proibidos não especificadas.", 
+            "Japão": "Informações sobre itens proibidos não especificadas.", 
+           "Jordânia": "É proibido enviar narcóticos e publicações com conteúdo político ou que afetem a segurança nacional. É necessário             autorização para enviar armas de fogo, munições, explosivos, dispositivos de comunicação sem fio, equipamentos de vigilância,             produtos químicos e farmacêuticos. A importação de alimentos exige certificado de origem, certificado sanitário e licença de             importação. Bebidas alcoólicas exigem licença de importação. Publicações, fotos, filmes e fitas de vídeo exigem aprovação             prévia. Equipamentos de telecomunicações exigem autorização.", 
+            "Cazaquistão": "Proibido enviar armas, materiais nucleares, explosivos, fogos de artifício e materiais perigosos.", 
+             "Quênia": "É proibido enviar armas de fogo.", 
+            "Coreia": "Proibido enviar itens falsificados, moeda estrangeira e selos postais usados. É necessário autorização para importar             meios de pagamento, metais preciosos e valores mobiliários. É proibido enviar dinheiro, títulos e outros itens negociáveis em                envios não registrados. Medicamentos exigem documentação específica.", 
+            "Kwait": "É necessário autorização para enviar produtos de petróleo, pastilhas Vicks, medicamentos, produtos químicos                         farmacêuticos e equipamentos médicos.", 
+            "Letônia": "É proibido enviar itens perigosos, dinheiro, valores mobiliários, joias, metais preciosos e pedras preciosas acima             de 50 gramas. É necessário certificado veterinário para produtos de origem animal (exceto alimentos enlatados). Produtos de             origem animal crus são proibidos. Produtos farmacêuticos exigem certificado de qualidade e documentação detalhada.", 
+           "Lituânia": "Proibido enviar dinheiro, valores mobiliários, cheques de viagem, sucata e resíduos de metais e pedras preciosas,              materiais radioativos, narcóticos, artigos perigosos para funcionários dos correios, itens com inscrições e imagens imorais e              itens proibidos pela legislação. É necessário autorização para enviar armas de fogo, munições, armas de colecionador,              equipamentos de segurança, fogos de artifício, objetos de valor cultural, obras de arte, antiguidades, produtos de origem              animal, plantas e produtos vegetais, resíduos e equipamentos de rádio.", 
+              "Luxemburgo": "É proibido enviar animais vivos (exceto abelhas e sanguessugas), carne e produtos cárneos (exceto caça                preparada), peles e couros não tratados, narcóticos e substâncias psicotrópicas, medicamentos sem autorização médica, armas                de fogo (exceto armas de fogo antigas e armas de fogo para colecionadores com autorização), munições e explosivos, itens                obscenos e itens proibidos no país de destino. Conservas de peixe sem indicação de origem são proibidas. É necessário                autorização para enviar abelhas rainhas e parasitas de insetos nocivos. É necessário licença para importar plantas, produtos                vegetais, batatas, frutas cítricas, maçãs, peras, marmelos, morangos, damascos, cerejas, ameixas, pêssegos, groselhas,                groselhas, groselhas, mirtilos, amoras, mirtilos, framboesas, flores cortadas, vinho e álcool. É necessário autorização para                enviar narcóticos e medicamentos com substâncias tóxicas e alucinógenas. A importação de heroína é proibida. ", 
+                "Malawi": "Proibido enviar moedas, notas, títulos, cheques de viagem, platina, ouro, prata, pedras preciosas e joias.", 
+                "Malásia": "É necessário cumprir a legislação de quarentena para enviar animais, partes de animais e produtos de origem                 animal. É necessário licença de importação e certificado fitossanitário para enviar plantas e sementes. Cigarros importados                 devem ter advertência de saúde impressa. Narcóticos exigem autorização do Ministério da Saúde. Venenos, anidrido acético e                 cloreto de acetilo exigem licença. Falsas declarações aduaneiras podem resultar em apreensão.", 
+               "Mali": "Proibido enviar animais vivos (exceto abelhas e sanguessugas), carne de animais selvagens de países não autorizados,                produtos lácteos não pasteurizados, peles e couros não tratados, armas de fogo e munições sem licença, itens obscenos,                dinheiro, ouro, pedras preciosas, joias e materiais de guerra sem autorização. É necessário autorização para enviar abelhas e                sanguessugas.", 
+               "Malta": "Proibido enviar itens indecentes, obscenos ou difamatórios, moedas, notas, ouro, pedras preciosas, joias e outros                artigos de valor (exceto em pacotes registrados ou segurados), e itens que exigem licença de importação (instrumentos de                 medição e materiais de guerra).", 
+              "México": "Proibido enviar animais vivos (exceto abelhas, sanguessugas e bichos-da-seda), produtos e subprodutos de animais                sem cumprir os regulamentos de saúde e ecologia, plantas e seus produtos sem cumprir os regulamentos de saúde e ecologia,                 narcóticos e substâncias psicotrópicas, publicações obscenas e imorais, materiais de loteria ou jogos de azar sem                autorização e itens perigosos sem autorização. É necessário certificado sanitário para importar produtos à base de carne. É                necessário autorização para importar produtos radioativos e artigos manufaturados para pesca. ", 
+              "Moldávia": "Proibido enviar narcóticos, medicamentos e produtos farmacêuticos sem autorização, armas, munições, explosivos,                itens perigosos, dinheiro, valores mobiliários, joias, metais preciosos, pedras preciosas acima de 50 gramas, itens que                coloquem funcionários em risco, itens com inscrições e imagens imorais e itens proibidos pela legislação. É necessário                 autorização para enviar material de guerra, pólvora, explosivos, armas de fogo e armas desportivas.", 
+                "Mônaco": "Mesmas regras da França.", 
+               "Mongólia": "Proibido enviar explosivos, combustíveis, materiais perigosos, itens proibidos pelas autoridades e farinha,                 arroz, açúcar, óleos, sabão, detergentes, estetoscópios e seringas descartáveis.", 
+               "Marrocos": "Proibido enviar animais vivos (exceto abelhas, sanguessugas, bichos-da-seda e parasitas), narcóticos e                correspondências químicas. Pérolas, pedras preciosas, metais preciosos, joias e bijuterias devem ser enviados em cartas                      registradas ou seguradas.", 
+               "Moçambique": "Proibido enviar animais vivos (exceto abelhas, sanguessugas e bichos-da-seda) e narcóticos sem autorização." 
+        };
+
+        searchForm.addEventListener('submit', function(event) {
+            event.preventDefault();
+            const country = countryInput.value.trim();
+
+            if (countryData[country]) {
+                countryNameSpan.textContent = country;
+                restrictionsP.textContent = countryData[country];
+                resultDiv.style.display = 'block';
+                errorDiv.style.display = 'none';
+            } else {
+                resultDiv.style.display = 'none';
+                errorDiv.style.display = 'block';
+            }
+        });
+    </script>
+</body>
+</html>
